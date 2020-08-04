@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd" >
+<generatorConfiguration>
+    <!-- 链接数据库的jar包的完整路径，一定要注意跟自己的仓库路径一致 ，注意修改  -->
+    <classPathEntry
+            location="D:\apache-maven-3.6.0-bin\apache-maven-3.6.0\local-repository\mysql\mysql-connector-java\5.0.2\mysql-connector-java-5.0.2.jar"></classPathEntry>
+    <context id="context1">
+        <commentGenerator>
+            <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+            <property name="suppressAllComments" value="true"/>
+        </commentGenerator>
+        <!--数据库连接的信息：驱动类、连接地址、用户名、密码 -->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/mydatabase?characterEncoding=utf-8"
+                        userId="root"
+                        password="3333"/>
+        <!-- 生成POJO类的位置,targetPackage生成的实体类的包名,targetProject是实体类包名生成的位置 -->
+        <javaModelGenerator targetPackage="com.sun.pojo" targetProject="src/main/java"/>
+        <!-- mapper映射文件生成的位置 -->
+        <sqlMapGenerator targetPackage="com.sun.dao" targetProject="src/main/java"/>
+        <!-- mapper接口生成的位置 -->
+        <javaClientGenerator targetPackage="com.sun.dao" targetProject="src/main/java" type="XMLMAPPER"/>
+        <!-- tableName指定数据库表  domainObjectName实体的名称-->
+
+
+        <table tableName="electronic_book" domainObjectName=""></table>
+        <table tableName="book_group" domainObjectName=""></table>
+    </context>
+</generatorConfiguration>

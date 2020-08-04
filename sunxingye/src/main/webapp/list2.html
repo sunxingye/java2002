@@ -1,0 +1,194 @@
+
+<table class="layui-hide" id="test" lay-filter="test">
+</table>
+
+<script type="text/html" id="toolbarDemo">
+
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+        <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>
+        <button class="layui-btn layui-btn-sm" lay-event="addElectronicBook">
+            <i class="layui-icon">&#xe608;</i>添加
+        </button>
+    </div>
+
+</script>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script>
+    layui.use(['form','layer','table'], function () {
+        var form = layui.form;
+        var layer = layui.layer;
+        var table = layui.table;
+
+        table.render({
+            elem: '#test'
+            , url: 'book/findBookGroup'
+            , limit: 50
+            , height: 'full-126'
+            , limits: [50]
+            , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
+            , defaultToolbar: ['filter', 'exports', 'print', { //自定义头部工具栏右侧图标。如无需自定义，去除该参数即可
+                title: '提示'
+
+                , icon: 'layui-icon-tips'
+            }]
+            , title: '用户数据表'
+            , cols: [[
+                {type: 'checkbox'}
+                , {field: 'bookId', title: '书籍编号', sort: true, width: 140}
+                , {field: 'bookName', title: '书名称'}
+                , {field: 'bookPrimary', title: '摘要'}
+                , {field: 'bookUploader', title: '上传者'}
+                , {
+                    field: 'uploadTime', title: '时间', templet: function (d) {
+                        return layui.util.toDateString(d.uploadTime, "yyyy-MM-dd");
+                    }
+                    , sort: true
+                }
+                , {field: 'groupName', title: '分类', sort: true}
+                , {title: '操作', toolbar: '#barDemo'}
+            ]]
+            , page: true
+        });
+
+        //头工具栏事件
+        table.on('toolbar(test)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch (obj.event) {
+                case 'getCheckData':
+                    var data = checkStatus.data;
+                    layer.alert(JSON.stringify(data));
+                    break;
+                case 'getCheckLength':
+                    var data = checkStatus.data;
+                    layer.msg('选中了：' + data.length + ' 个');
+                    break;
+                case 'isAll':
+                    layer.msg(checkStatus.isAll ? '全选' : '未全选');
+                    break;
+                case 'addElectronicBook':
+                    layer.open({
+                        type: 1,
+                        title: '新增一本书',
+                        shadeClose: true, //点击遮罩关闭层
+                        area: ['700px', '520px'],
+                        content: $('#updateBook').html(),
+                        btn: ['提交', '取消'], //可以写多个按钮
+                        success: function () {//弹出层打开后的回调函数,数据回显
+
+                            for (var i = 0; i < groups.length; i++) {
+                                $("#groupId").append('<option value="' + groups[i].id + '">' + groups[i].groupName + '</option>');
+                            }
+                            form.render();//后追加到页面的元素，layui不渲染，必须render
+                        },
+                    });
+                // //自定义头工具栏右侧图标 - 提示
+                // case 'LAYTABLE_TIPS':
+                //     layer.alert('这是工具栏右侧自定义的一个图标按钮');
+                //     break;
+            }
+        });
+
+
+        //监听行工具事件
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            //console.log(obj)
+            if (obj.event === 'del') {
+                layer.confirm('真的删除行么', function (index) {
+                    obj.del();
+                    layer.close(index);
+                });
+            } else if (obj.event === 'edit') {
+                console.log(data);
+
+                layer.open({
+                    type: 2,
+                    title: '编辑这本书',
+                    shadeClose: true, //点击遮罩关闭层
+                    area: ['700px', '520px'],
+                    content: 'updata.html',
+                    success: function (layero, index) {
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(data);
+
+                    }
+
+                })
+            }
+        });
+    });
+
+    var groups = null;
+
+    <!-- 页面加载时触发 -->
+    $(function () {
+
+        $.ajax({
+            type: "POST",
+            url: "group/findAll",
+            success: function(backData){
+                JSON.stringify(backData);
+                groups  = backData;
+            }
+        });
+
+
+    })
+</script>
+
+<script type="text/html" id="updateBook">
+    <form id="music-edit-form" style="width: 80%" class="layui-form" lay-filter="music-edit-form">
+        <input type="hidden" name="bookId" id="bookId">
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">文档名称</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="bookName" autocomplete="off" class="layui-input" lay-verify="content">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">上传人</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="bookUploader" autocomplete="on" class="layui-input" lay-verify="content">
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">上传日期</label>
+            <div class="layui-input-inline">
+                <input type="text" id="test1" name="uploadTime" class="layui-input" autocomplete="off"
+                       placeholder="yyyy/MM/dd" lay-verify="required">
+            </div>
+            <div class="layui-form-mid layui-word-aux">辅助文字</div>
+        </div>
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">上传摘要</label>
+            <div class="layui-input-block">
+                <textarea name="bookPrimary" placeholder="请输入内容" class="layui-textarea" autocomplete="off" lay-verify="required"></textarea>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">文档类型</label>
+                <div class="layui-input-inline">
+                    <select name="groupId" lay-verify="required">
+
+                    </select>
+                </div>
+            </div>
+        </div>
+    </form>
+</script>

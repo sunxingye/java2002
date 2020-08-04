@@ -1,0 +1,171 @@
+<table class="layui-hide" id="test" lay-filter="test">
+</table>
+
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+        <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+        <button class="layui-btn layui-btn-sm layui-bg-red" lay-event="isAll">删除所选中的</button>
+        <button class="layui-btn layui-btn-sm" id="add">
+            <i class="layui-icon">&#xe608;</i>添加
+        </button>
+    </div>
+</script>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script>
+    layui.use('table', function () {
+        var table = layui.table;
+
+        table.render({
+            elem: '#test'
+            , url: 'book/findBookGroup'
+            , limit: 50
+            , height: 'full-126'
+            , limits: [50]
+            , toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板
+            , defaultToolbar: ['filter', 'exports', 'print', { //自定义头部工具栏右侧图标。如无需自定义，去除该参数即可
+                title: '提示'
+                , icon: 'layui-icon-tips'
+            }]
+            , title: '用户数据表'
+            , cols: [[
+                {type: 'checkbox'}
+                , {field: 'bookId', title: '书籍编号', sort: true, width: 80}
+                , {field: 'bookName', title: '书名称'}
+                , {field: 'bookPrimary', title: '摘要'}
+                , {field: 'bookUploader', title: '上传者'}
+                , {
+                    field: 'uploadTime', title: '时间', templet: function (d) {
+                        return layui.util.toDateString(d.uploadTime, "yyyy/MM/dd");
+                    }
+                    , sort: true
+                }
+                , {field: 'groupName', title: '分类', sort: true}
+                , {title: '操作', toolbar: '#barDemo'}
+            ]]
+            , page: true
+            // ,parseData: function(res){
+            //     return {
+            //         "data": res.rows.item
+            //     }
+            // }
+        });
+
+        //头工具栏事件
+        table.on('toolbar(test)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch (obj.event) {
+                case 'getCheckData':
+                    var data = checkStatus.data;
+                    layer.alert(JSON.stringify(data));
+                    break;
+                case 'getCheckLength':
+                    var data = checkStatus.data;
+                    layer.msg('选中了：' + data.length + ' 个');
+                    break;
+                case 'isAll':
+                    layer.confirm('真的删除行么？', {
+                        btn: ['真的', '手滑了'] //可以无限个按钮
+                        , area: '400px'
+                    }, function (index, layero) {
+                        //按钮【按钮一】的回调
+                        // layer.msg("删除快乐")
+                        var data = checkStatus.data;
+                        console.log(data);
+                        $.ajax({
+                            type: "post",
+                            url: "book/deleteMoreBook",
+                            data: JSON.stringify(data),//必须
+                            contentType: "application/json;charsetset=UTF-8",//必须
+                            dataType: "json",//必须
+                            cache: true,
+                            async: false,
+
+                            success: function (data) {
+                                console.log(data + "-----" + status);
+                                layer.msg("删除快乐");
+                            }
+                        });
+                        window.location.reload();
+                        layer.close(index);
+                    }, function (index) {
+                        //按钮【按钮二】的回调
+                        layer.msg("小心点！")
+                    });
+                    break;
+
+                // //自定义头工具栏右侧图标 - 提示
+                // case 'LAYTABLE_TIPS':
+                //     layer.alert('这是工具栏右侧自定义的一个图标按钮');
+                //     break;
+            }
+        });
+
+        $('#add').on('click', function () {
+            layer.open({
+                type: 2,
+                title: '新增一本书',
+
+                shadeClose: true, //点击遮罩关闭层
+                area: ['700px', '520px'],
+                content: 'test8.html'
+            });
+        });
+
+
+        //监听行工具事件
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            //console.log(obj)
+            if (obj.event === 'del') {
+                // layer.confirm('真的删除行么', function (index) {
+                //     obj.del();
+                //
+                //     layer.close(index);
+                // });
+
+                layer.confirm('真的删除行么？', {
+                    btn: ['真的', '手滑了'] //可以无限个按钮
+                    , area: '400px'
+                }, function (index, layero) {
+                    //按钮【按钮一】的回调
+                    // layer.msg("删除快乐")
+                    console.log(data.bookId);
+                    $.post("book/deleteBook", data, function (data, status) {
+
+                        console.log(data + "-----" + status);
+                        layer.msg("删除快乐");
+
+                        window.location.reload();
+                        layer.close(index);
+                    });
+                }, function (index) {
+                    //按钮【按钮二】的回调
+                    layer.msg("小心点！")
+                });
+
+            } else if (obj.event === 'edit') {
+                console.log(data);
+
+                layer.open({
+                    type: 2,
+                    title: '编辑这本书',
+                    shadeClose: true, //点击遮罩关闭层
+                    area: ['700px', '520px'],
+                    content: 'updata.html',
+                    success: function (layero, index) {
+                        var iframe = window['layui-layer-iframe' + index];
+                        iframe.child(data);
+
+                    }
+
+                })
+            }
+        });
+    });
+</script>
